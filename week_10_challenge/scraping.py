@@ -20,8 +20,8 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last_modified": dt.datetime.now()
-        "hemisphere_images": hemisphere_image_urls()
+        "last_modified": dt.datetime.now(),
+        "hemispheres": hemisphere_image_urls(browser)
     }
 
     # Stop webdriver and return data
@@ -98,6 +98,32 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+
+def hemisphere_image_urls(browser):
+    # 1. Use browser to visit the URL 
+    url = 'https://data-class-mars-hemispheres.s3.amazonaws.com/Mars_Hemispheres/index.html'
+    browser.visit(url)
+    html = browser.html
+    imgs_soup = soup(html, 'html.parser')
+    hem_image_urls = []
+
+    # 3. Write code to retrieve the image urls and titles for each hemisphere.
+    images = imgs_soup.find_all('img', class_ = 'thumb')
+    titles = imgs_soup.find_all('h3')
+
+    base_url = "https://astrogeology.usgs.gov/cache/"
+    image_urls = [base_url + image['src'] for image in images]
+    titles = [title.text for title in titles]
+
+    title_url_pair = list(zip(image_urls,titles))
+
+    for x in title_url_pair:
+        mars_json = {'img_url':x[0], 'title':x[1]}
+        hem_image_urls.append(mars_json)
+    
+    return hem_image_urls
+    
 
 if __name__ == "__main__":
 
